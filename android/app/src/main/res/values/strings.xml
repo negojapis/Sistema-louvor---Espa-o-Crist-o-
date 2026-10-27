@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Espaço Cristão</string>
+    <string name="title_activity_main">Espaço Cristão</string>
+    <string name="package_name">br.com.espacocristao.app</string>
+    <string name="custom_url_scheme">br.com.espacocristao.app</string>
+</resources>

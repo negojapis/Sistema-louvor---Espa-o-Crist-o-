@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient, Session } from '@supabase/supabase-js';
 
 // Obter credenciais via variáveis de ambiente (.env) ou configuração salva no navegador
 const getEnvOrStorage = (key: string, storageKey: string): string => {
@@ -19,11 +20,14 @@ export const getSupabaseConfig = () => {
   };
 };
 
+let supabaseInstance: SupabaseClient | null = null;
+
 export const saveSupabaseConfig = (url: string, anonKey: string) => {
   if (typeof window !== 'undefined') {
     localStorage.setItem('espaco_cristao_supabase_url', url.trim());
     localStorage.setItem('espaco_cristao_supabase_anon_key', anonKey.trim());
   }
+  supabaseInstance = null; // Reinicializa a instância com novas chaves
 };
 
 export const clearSupabaseConfig = () => {
@@ -31,11 +35,10 @@ export const clearSupabaseConfig = () => {
     localStorage.removeItem('espaco_cristao_supabase_url');
     localStorage.removeItem('espaco_cristao_supabase_anon_key');
   }
+  supabaseInstance = null;
 };
 
-// Inicialização segura do cliente Supabase
-let supabaseInstance: SupabaseClient | null = null;
-
+// Inicialização segura do cliente Supabase (usando apenas anonKey no frontend)
 export const getSupabaseClient = (): SupabaseClient | null => {
   const config = getSupabaseConfig();
   if (!config.isConfigured) return null;
@@ -46,6 +49,7 @@ export const getSupabaseClient = (): SupabaseClient | null => {
         auth: {
           persistSession: true,
           autoRefreshToken: true,
+          detectSessionInUrl: true,
         },
       });
     } catch (err) {
@@ -54,6 +58,60 @@ export const getSupabaseClient = (): SupabaseClient | null => {
     }
   }
   return supabaseInstance;
+};
+
+// ==============================================================================
+// FUNÇÕES DE AUTENTICAÇÃO SUPABASE AUTH
+// ==============================================================================
+
+export const signInWithEmail = async (email: string, password: string) => {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Cliente Supabase não está configurado.');
+  const { data, error } = await client.auth.signInWithPassword({
+    email: email.trim(),
+    password,
+  });
+  if (error) throw error;
+  return data;
+};
+
+export const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Cliente Supabase não está configurado.');
+  const { data, error } = await client.auth.signUp({
+    email: email.trim(),
+    password,
+    options: {
+      data: {
+        full_name: fullName.trim(),
+      },
+    },
+  });
+  if (error) throw error;
+  return data;
+};
+
+export const signOutUser = async () => {
+  const client = getSupabaseClient();
+  if (!client) return;
+  const { error } = await client.auth.signOut();
+  if (error) throw error;
+};
+
+export const resetPasswordForEmail = async (email: string) => {
+  const client = getSupabaseClient();
+  if (!client) throw new Error('Cliente Supabase não está configurado.');
+  const { error } = await client.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: window.location.origin,
+  });
+  if (error) throw error;
+};
+
+export const getCurrentSession = async (): Promise<Session | null> => {
+  const client = getSupabaseClient();
+  if (!client) return null;
+  const { data } = await client.auth.getSession();
+  return data.session;
 };
 
 // Testar conexão com o banco do Supabase
@@ -65,7 +123,6 @@ export const testSupabaseConnection = async (): Promise<{ success: boolean; mess
   try {
     const { error } = await client.from('services').select('count', { count: 'exact', head: true });
     if (error) {
-      // Se der erro de tabela não encontrada ou RLS, indica que conectou mas falta rodar o SQL
       if (error.code === '42P01') {
         return { success: false, message: 'Conectou ao Supabase, mas a tabela "services" ainda não existe. Execute o script SQL no Supabase!' };
       }

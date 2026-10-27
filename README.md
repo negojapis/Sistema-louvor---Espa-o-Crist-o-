@@ -1,14 +1,22 @@
-# Sistema de Escalas para Ministério de Louvor 🎵
+# Aplicativo Móvel - Espaço Cristão (Ministério de Louvor) 📱🎵
 
-Sistema moderno, clean e acolhedor para gestão de escalas, disponibilidades e repertório do ministério de louvor de uma igreja. Desenvolvido com foco total na experiência pelo celular (Mobile-First), alta legibilidade e facilidade de uso.
+Aplicativo móvel nativo (Android e iOS) moderno, clean e acolhedor para gestão de escalas, disponibilidades e repertório do ministério de louvor da igreja.
+
+Desenvolvido para **Android** e **iOS** com **Capacitor + React 19 + TypeScript**, com suporte completo a Safe Areas (notch/dynamic island), feedback tátil (haptics), botões nativos e persistência em nuvem com Supabase.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Frontend:** React 19 + TypeScript + Vite
-- **Estilização:** Tailwind CSS (tema suave, acolhedor e limpo)
-- **Ícones:** Lucide React
+- **Mobile Runtime:** Capacitor 8 (Android & iOS)
+- **Frontend Core:** React 19 + TypeScript + Vite
+- **Estilização:** Tailwind CSS (ergonomia mobile e temas acolhedores)
+- **Recursos Nativos:**
+  - Status Bar nativa com contraste automático
+  - Splash screen nativa
+  - Vibração tátil (Haptic feedback) ao selecionar disponibilidades e abas
+  - Botão voltar nativo (Android back button) integrado a modais
+- **Ícones:** Lucide React & Phosphor Icons
 - **Banco de Dados & Autenticação:** Supabase (PostgreSQL + Row Level Security - RLS)
 
 ---
@@ -64,23 +72,46 @@ Todas as permissões são aplicadas a nível de banco de dados através do Postg
 
 ---
 
-## 🚀 Como Executar Localmente
+## 📱 Como Rodar e Desenvolver o Aplicativo Móvel
 
-### 1. Clonar e Instalar Dependências
+### 1. Instalar Dependências
 ```bash
 npm install
 ```
 
-### 2. Rodar em Modo de Desenvolvimento
+### 2. Desenvolvimento no Navegador (Mobile Preview)
+Para iterar rapidamente em layout e lógica no navegador com dimensões de celular:
 ```bash
 npm run dev
 ```
-O sistema abrirá em `http://localhost:5173/`. Por padrão, ele inicia em **Modo Demonstração** com dados realistas já carregados.
 
-### 3. Build de Produção
+### 3. Compilar e Sincronizar com os Apps Nativos
+Sempre que fizer alterações no código e quiser enviar para o Android ou iOS:
 ```bash
-npm run build
+npm run cap:build
 ```
+*(ou se já tiver rodado o build: `npm run cap:sync`)*
+
+---
+
+### 🤖 Abrir no Android Studio (Gerar APK / Emulador / Play Store)
+```bash
+npm run cap:android
+```
+- Abrirá o projeto nativo localizado na pasta `/android` diretamente no **Android Studio**.
+- No Android Studio você pode:
+  - Clicar em **Run** para testar em um celular conectado via USB ou no emulador.
+  - Ir em **Build > Generate Signed Bundle / APK** para gerar o arquivo `.aab` ou `.apk` para publicação na Google Play Store.
+
+---
+
+### 🍏 Abrir no Xcode (iOS / iPhone / App Store)
+*(Requer ambiente macOS para compilação final)*
+```bash
+npm run cap:ios
+```
+- Abrirá o workspace do Xcode localizado na pasta `/ios`.
+- No Xcode você pode rodar nos simuladores de iPhone ou gerar o build para envio ao TestFlight e Apple App Store.
 
 ---
 

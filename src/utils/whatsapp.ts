@@ -1,76 +1,80 @@
-import type { Service, ScheduleAssignment, Member, Song } from '../types';
-
-export function formatServiceDate(dateStr: string): string {
-  try {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const d = new Date(year, month - 1, day);
-    const weekday = d.toLocaleDateString('pt-BR', { weekday: 'long' });
-    const monthName = d.toLocaleDateString('pt-BR', { month: 'long' });
-    return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)}, ${day} de ${
-      monthName.charAt(0).toUpperCase() + monthName.slice(1)
-    } de ${year}`;
-  } catch {
-    return dateStr;
-  }
-}
+import type { SundayService, ScheduleAssignment, Member, SetlistSong } from '../types';
+import { formatSundayDate } from './dateUtils';
 
 export function generateWhatsAppScheduleText(params: {
-  service: Service;
-  schedule: (ScheduleAssignment & { member?: Member })[];
-  songs: Song[];
+  service: SundayService;
+  assignments: (ScheduleAssignment & { member?: Member })[];
+  songs: SetlistSong[];
 }): string {
-  const { service, schedule, songs } = params;
-  const formattedDate = formatServiceDate(service.date);
-
-  const louvor = schedule.filter((s) => s.ministry_section !== 'multimidia');
-  const multimidia = schedule.filter((s) => s.ministry_section === 'multimidia');
+  const { service, assignments, songs } = params;
+  const formattedDate = formatSundayDate(service.date);
+  const periodLabel = service.period === 'manha' ? 'MANHÃ (09:30)' : 'NOITE (19:00)';
 
   const lines: string[] = [
     `⛪ *ESPAÇO CRISTÃO — MINISTÉRIO DE LOUVOR*`,
-    `✨ *ESCALA DO CULTO*`,
-    `📌 *${service.title.toUpperCase()}*`,
-    `🗓️ *Data:* ${formattedDate}`,
-    `⏰ *Horário:* ${service.time}`,
+    `✨ *ESCALA OFICIAL DO CULTO*`,
+    `🗓️ *${formattedDate.toUpperCase()}*`,
+    `⏰ *Horário:* ${periodLabel}`,
+    ``,
   ];
 
-  if (service.notes) {
-    lines.push(`📝 *Avisos:* ${service.notes}`);
-  }
+  const isMediaTech = (role: string) => {
+    const r = role.toLowerCase();
+    return (
+      r.includes('som') ||
+      r.includes('mesa') ||
+      r.includes('multimídia') ||
+      r.includes('multimidia') ||
+      r.includes('projeção') ||
+      r.includes('projecao') ||
+      r.includes('transmissão') ||
+      r.includes('transmissao') ||
+      r.includes('live') ||
+      r.includes('foto') ||
+      r.includes('vídeo') ||
+      r.includes('video') ||
+      r.includes('iluminação') ||
+      r.includes('iluminacao')
+    );
+  };
 
-  lines.push('');
-  lines.push(`🎵 *EQUIPE DE LOUVOR & CONDUÇÃO:*`);
-  if (louvor.length === 0) {
+  const louvorAssignments = assignments.filter((a) => !isMediaTech(a.role));
+  const mediaAssignments = assignments.filter((a) => isMediaTech(a.role));
+
+  if (assignments.length === 0) {
+    lines.push(`🎵 *EQUIPE ESCALADA:*`);
     lines.push(`• _(Nenhum integrante escalado ainda)_`);
   } else {
-    louvor.forEach((item) => {
-      lines.push(`• *${item.role_name}:* ${item.member?.name || 'A definir'}`);
-    });
-  }
+    if (louvorAssignments.length > 0) {
+      lines.push(`🎵 *LOUVOR & VOZES:*`);
+      louvorAssignments.forEach((item) => {
+        lines.push(`• *${item.role}:* ${item.member?.name || 'A definir'}`);
+      });
+    }
 
-  lines.push('');
-  lines.push(`🎛️ *EQUIPE DE MULTIMÍDIA:*`);
-  if (multimidia.length === 0) {
-    lines.push(`• _(Nenhum integrante escalado ainda)_`);
-  } else {
-    multimidia.forEach((item) => {
-      const leaderNote = item.member?.is_leader ? ' (Líder)' : '';
-      lines.push(`• *${item.role_name}:* ${item.member?.name || 'A definir'}${leaderNote}`);
-    });
+    if (mediaAssignments.length > 0) {
+      if (louvorAssignments.length > 0) lines.push('');
+      lines.push(`🎛️ *MULTIMÍDIA, SOM & FOTO:*`);
+      mediaAssignments.forEach((item) => {
+        lines.push(`• *${item.role}:* ${item.member?.name || 'A definir'}`);
+      });
+    }
   }
 
   if (songs.length > 0) {
     lines.push('');
-    lines.push(`🎶 *REPERTÓRIO DE MÚSICAS:*`);
+    lines.push(`🎶 *MÚSICAS QUE VAMOS TOCAR (SETLIST):*`);
     songs.forEach((song, idx) => {
-      const tonePart = song.tone ? ` (Tom: ${song.tone})` : '';
+      const artistPart = song.artist ? ` - ${song.artist}` : '';
+      const tonePart = song.tone ? ` [Tom: ${song.tone}]` : '';
       const linkPart = song.link ? `\n   🔗 ${song.link}` : '';
-      lines.push(`${idx + 1}. *${song.title}*${tonePart}${linkPart}`);
+      lines.push(`${idx + 1}. *${song.title}*${artistPart}${tonePart}${linkPart}`);
     });
   }
 
   lines.push('');
   lines.push(`🙏 _"Tudo o que fizerem, façam de todo o coração, como para o Senhor." (Colossenses 3:23)_`);
-  lines.push(`_Favor confirmar o recebimento no grupo!_`);
+  lines.push(`_Por favor, confirmem o recebimento e cheguem 30min antes para afinação!_`);
 
   return lines.join('\n');
 }

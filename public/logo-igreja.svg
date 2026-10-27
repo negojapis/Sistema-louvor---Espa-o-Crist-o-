@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160" fill="none">
+  <!-- Subtle warm surface background -->
+  <rect width="160" height="160" rx="36" fill="#FFF4E8" />
+  
+  <!-- Geometric Espaço Cristão Cross & Portal Symbol in Brand Orange #D96B0B -->
+  <circle cx="80" cy="80" r="54" stroke="#D96B0B" stroke-width="8" stroke-dasharray="16 8" opacity="0.4" />
+  
+  <!-- Central cross in brand orange -->
+  <path d="M80 40 V120" stroke="#D96B0B" stroke-width="12" stroke-linecap="round" />
+  <path d="M50 68 H110" stroke="#D96B0B" stroke-width="12" stroke-linecap="round" />
+  
+  <!-- Warm glow center -->
+  <circle cx="80" cy="68" r="7" fill="#B85505" />
+</svg>
